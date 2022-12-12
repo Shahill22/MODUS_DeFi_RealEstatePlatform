@@ -5,7 +5,6 @@ pragma solidity ^0.8.16;
  * @title Standard Interface of ERC1594
  */
 interface IERC1594 {
-    //draft implementation of EIP1594
     // Transfers
     function transferWithData(
         address _to,
