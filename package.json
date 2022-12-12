@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.8.0"
+  },
+  "name": "modus",
+  "version": "1.0.0",
+  "description": "Modus DeFi Real Estate Investment Platform",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shahill22/MODUS_DeFi_RealEstatePlatform.git"
+  },
+  "author": "Shahil",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Shahill22/MODUS_DeFi_RealEstatePlatform/issues"
+  },
+  "homepage": "https://github.com/Shahill22/MODUS_DeFi_RealEstatePlatform#readme"
+}
