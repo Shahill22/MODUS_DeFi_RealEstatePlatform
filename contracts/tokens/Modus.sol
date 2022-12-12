@@ -4,7 +4,6 @@ pragma solidity ^0.8.16;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Modus is ERC20 {
-    //implementation of MODUS ERC20 token
     constructor(
         address treasury,
         address founder1,
