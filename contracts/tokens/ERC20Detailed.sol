@@ -4,7 +4,6 @@ pragma solidity ^0.8.16;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 abstract contract ERC20Detailed is IERC20 {
-    //mock ERC20Detailed contract
     string private _name;
     string private _symbol;
     uint8 private _decimals;
