@@ -1,1 +1,1 @@
-MODUS DeFi Real Estate Investment Platform
+MODUS Decentralized Finance Real Estate Investment Platform
