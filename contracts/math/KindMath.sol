@@ -7,7 +7,6 @@ pragma solidity ^0.8.16;
  * @dev Math operations with safety checks that returns boolean
  */
 library KindMath {
-    //operations to safety check for functions
     /**
      * @dev Multiplies two numbers, return false on overflow.
      */
