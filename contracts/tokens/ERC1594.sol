@@ -11,7 +11,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @title Standard implementation of ERC1594 (Subset of ERC1400 https://github.com/ethereum/EIPs/issues/1411)
  */
 contract ERC1594 is IERC1594, ERC20Token, Ownable {
-    //security token standard using ERC1410
     // Variable which tells whether issuance is ON or OFF forever
     // Implementers need to implement one more function to reset the value of `issuance` variable
     // to false. That function is not a part of the standard (EIP-1594) as it is depend on the various factors
