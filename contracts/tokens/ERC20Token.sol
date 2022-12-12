@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract ERC20Token is IERC20 {
-    //basic class implementation of ERC1410
     using SafeMath for uint256;
 
     mapping(address => uint256) internal _balances;
