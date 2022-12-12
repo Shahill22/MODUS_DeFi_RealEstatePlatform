@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Wallet is Ownable {
-    //stores modus token for staking
     using SafeMath for uint256;
 
     event Deposited(address indexed user, uint256 amount);
