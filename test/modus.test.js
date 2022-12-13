@@ -29,6 +29,6 @@ contract("Modus", function (accounts) {
   });
 
   it("has 18 decimals", async function () {
-    expect(await modusToken.decimals()).to.be.bignumber.equal("5");
+    expect(await modusToken.decimals()).to.be.bignumber.equal("18");
   });
 });

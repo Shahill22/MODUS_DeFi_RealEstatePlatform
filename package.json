@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "@openzeppelin/contracts": "^4.8.0"
+    "@openzeppelin/contracts": "^4.8.0",
+    "@openzeppelin/test-helpers": "^0.5.16"
   },
   "name": "modus",
   "version": "1.0.0",
