@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract StakingPool is Wallet {
     using SafeMath for uint256;
+    uint unstackPeriodCount = 7;
 
     event Staked(address indexed user, uint amount);
     event UnStaked(address indexed user, uint256 amount);
@@ -40,6 +41,7 @@ contract StakingPool is Wallet {
 
     function endStake(uint amount) public virtual {
         require(stakes[msg.sender] >= amount, "Not enough tokens staked");
+        //require(unstackPeriodCount=0,"Unstaking requires 1 week waiting duration");
 
         // return modus tokens to modus token balance
         balances[msg.sender] = balances[msg.sender].add(amount);
