@@ -5,11 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract realEstateTransaction is Ownable {
     constructor() Ownable() {}
 
-    event Mint(address indexed _to, uint16 tokenProperty, string status);
-    event noMint(address indexed _to, string status);
-    event LogForSale(string _addressName, uint16 propertyID, uint _price);
-    event LogSold(string addressName, uint16 propertyToken);
-    event NewOwner(uint16 propertyToken, address _newOwner, string status);
     uint16 propertyID = 0;
     mapping(uint16 => address) internal idToOwner;
     mapping(uint16 => string) public idToProperty;
@@ -21,7 +16,7 @@ contract realEstateTransaction is Ownable {
         address payable seller;
     }
 
-    function listPropertyForSale(
+    function listProperty(
         string calldata _propertyName,
         uint _price
     ) public returns (uint16) {
@@ -33,7 +28,6 @@ contract realEstateTransaction is Ownable {
             seller: payable(msg.sender)
         });
 
-        emit LogForSale(_propertyName, propertyID, _price);
         return propertyID;
     }
 }
