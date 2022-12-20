@@ -27,14 +27,23 @@ contract StakingContract {
         uint256 amount;
     }
 
+    //Tier
+    struct Tier {
+        uint256 tokensToStake;
+        uint256 investorsCount;
+    }
+
     // CONTRACT STATE VARIABLES
     IERC20 public token;
     address public owner;
     uint256 public currentTotalStake;
     uint256 public unstakingPeriod;
+    uint256 public tierID = 0;
+    uint256 public totalTiers = 0;
 
     mapping(address => StakeDeposit) private _stakeDeposits;
     mapping(address => WithdrawalState) private _withdrawStates;
+    mapping(tierID => Tier) public tierAllocated;
 
     // MODIFIERS
 
@@ -74,6 +83,30 @@ contract StakingContract {
         token = IERC20(_token);
     }
 
+    function setTiers(uint256 _tokensToStake) external onlyOwner {
+        tierID += 1;
+        tierAllocated[tierID] = Tier;
+        tierAllocated[tierID].Tier.tokensToStake = _tokensToStake;
+        totalTiers++;
+    }
+
+    function determineTiers(uint256 _stakedAmount) external returns (uint256) {
+        for (uint i = 1; i <= totalTiers; i++) {
+            if (
+                (_stakedAmount >= tierAllocated[i].Tier.tokensToStake) &&
+                (_stakedAmount < tierAllocated[i + 1].Tier.tokensToStake)
+            ) {
+                return i;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    function totalInvestorsInTier(uint256 _tierID) external returns (uint256) {
+        return tierAllocated[_tierID].Tier.investorsCount;
+    }
+
     function deposit(uint256 amount) external {
         StakeDeposit storage stakeDeposit = _stakeDeposits[msg.sender];
         require(
@@ -92,6 +125,8 @@ contract StakingContract {
             token.transferFrom(msg.sender, address(this), amount),
             "[Deposit] Something went wrong during the token transfer"
         );
+        uint356 memory toTier = getTierDetails(msg.sender);
+        tierAllocated[toTier].Tier.investorsCount += 1;
 
         emit StakeDeposited(msg.sender, amount);
     }
@@ -165,6 +200,8 @@ contract StakingContract {
         } else {
             delete _stakeDeposits[msg.sender];
         }
+        uint356 memory toTier = getTierDetails(msg.sender);
+        tierAllocated[toTier].Tier.investorsCount -= 1;
 
         require(
             token.transfer(msg.sender, amount),
@@ -194,5 +231,19 @@ contract StakingContract {
         StakeDeposit memory s = _stakeDeposits[account];
 
         return (s.amount, s.startDate, s.endDate);
+    }
+
+    function getTierDetails(
+        address account
+    ) external view returns (uint256 tier) {
+        require(
+            _stakeDeposits[account].exists &&
+                _stakeDeposits[account].amount != 0,
+            "[Validation] This account doesn't have a stake deposit"
+        );
+
+        StakeDeposit memory s = _stakeDeposits[account];
+
+        return (determineTier(s.amount));
     }
 }
