@@ -43,7 +43,7 @@ contract StakingContract {
 
     mapping(address => StakeDeposit) private _stakeDeposits;
     mapping(address => WithdrawalState) private _withdrawStates;
-    mapping(tierID => Tier) public tierAllocated;
+    mapping(uint256 => Tier) public tierAllocated;
 
     // MODIFIERS
 
@@ -85,26 +85,44 @@ contract StakingContract {
 
     function setTiers(uint256 _tokensToStake) external onlyOwner {
         tierID += 1;
-        tierAllocated[tierID] = Tier;
-        tierAllocated[tierID].Tier.tokensToStake = _tokensToStake;
+        tierAllocated[tierID] = Tier(_tokensToStake, 0);
+        //tierAllocated[tierID].Tier.tokensToStake = _tokensToStake;
         totalTiers++;
     }
 
-    function determineTiers(uint256 _stakedAmount) external returns (uint256) {
+    function determineTiers(
+        uint256 _stakedAmount
+    ) public view returns (uint256 tier) {
+        require(
+            _stakedAmount != 0,
+            "[Validation] This account doesn't have a stake deposit"
+        );
         for (uint i = 1; i <= totalTiers; i++) {
             if (
-                (_stakedAmount >= tierAllocated[i].Tier.tokensToStake) &&
-                (_stakedAmount < tierAllocated[i + 1].Tier.tokensToStake)
+                (_stakedAmount >= tierAllocated[i].tokensToStake) &&
+                (_stakedAmount < tierAllocated[i + 1].tokensToStake)
             ) {
                 return i;
-            } else {
-                return 0;
             }
         }
     }
 
-    function totalInvestorsInTier(uint256 _tierID) external returns (uint256) {
-        return tierAllocated[_tierID].Tier.investorsCount;
+    function totalInvestorsInTier(
+        uint256 _tierID
+    ) external view returns (uint256) {
+        return tierAllocated[_tierID].investorsCount;
+    }
+
+    function getTierDetails(address account) public returns (uint256 tier) {
+        require(
+            _stakeDeposits[account].exists &&
+                _stakeDeposits[account].amount != 0,
+            "[Validation] This account doesn't have a stake deposit"
+        );
+
+        StakeDeposit memory s = _stakeDeposits[account];
+
+        return (determineTiers(s.amount));
     }
 
     function deposit(uint256 amount) external {
@@ -125,8 +143,8 @@ contract StakingContract {
             token.transferFrom(msg.sender, address(this), amount),
             "[Deposit] Something went wrong during the token transfer"
         );
-        uint356 memory toTier = getTierDetails(msg.sender);
-        tierAllocated[toTier].Tier.investorsCount += 1;
+        uint256 toTier = getTierDetails(msg.sender);
+        tierAllocated[toTier].investorsCount += 1;
 
         emit StakeDeposited(msg.sender, amount);
     }
@@ -200,8 +218,8 @@ contract StakingContract {
         } else {
             delete _stakeDeposits[msg.sender];
         }
-        uint356 memory toTier = getTierDetails(msg.sender);
-        tierAllocated[toTier].Tier.investorsCount -= 1;
+        uint256 toTier = getTierDetails(msg.sender);
+        tierAllocated[toTier].investorsCount -= 1;
 
         require(
             token.transfer(msg.sender, amount),
@@ -231,19 +249,5 @@ contract StakingContract {
         StakeDeposit memory s = _stakeDeposits[account];
 
         return (s.amount, s.startDate, s.endDate);
-    }
-
-    function getTierDetails(
-        address account
-    ) external view returns (uint256 tier) {
-        require(
-            _stakeDeposits[account].exists &&
-                _stakeDeposits[account].amount != 0,
-            "[Validation] This account doesn't have a stake deposit"
-        );
-
-        StakeDeposit memory s = _stakeDeposits[account];
-
-        return (determineTier(s.amount));
     }
 }
