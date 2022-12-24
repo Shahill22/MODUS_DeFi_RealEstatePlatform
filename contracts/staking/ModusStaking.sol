@@ -44,6 +44,7 @@ contract ModusStakingContract {
         uint256 initiateDate
     );
     event WithdrawExecuted(address indexed account, uint256 amount);
+    event TierAdded(uint256 IDtier, uint256 tierAmount);
 
     /* Modifiers */
     modifier onlyOwner() {
@@ -82,13 +83,15 @@ contract ModusStakingContract {
      */
     function setTiers(uint256 _tokensToStake) external onlyOwner {
         tierID += 1;
+        require(tierID != 0, "ModusStaking: Invalid tier ID");
         require(
-            tierID != 0 &&
+            _tokensToStake < tierAllocated[tierID + 1].tokensToStake &&
                 _tokensToStake > tierAllocated[tierID - 1].tokensToStake,
-            "ModusStaking: Token for this tier must be greater than previous one "
+            "ModusStaking: Token for this tier must be in sorted order "
         );
         tierAllocated[tierID] = Tier(_tokensToStake, 0);
         totalTiers++;
+        emit TierAdded(tierID, _tokensToStake);
     }
 
     /**
@@ -101,10 +104,11 @@ contract ModusStakingContract {
         uint256 _tierID,
         uint256 _tokensToStake
     ) external onlyOwner {
+        require(_tierID != 0, "ModusStaking: Invalid tier ID");
         require(
-            _tierID != 0 &&
+            _tokensToStake < tierAllocated[_tierID + 1].tokensToStake &&
                 _tokensToStake > tierAllocated[_tierID - 1].tokensToStake,
-            "ModusStaking: Token for this tier must be greater than previous one "
+            "ModusStaking: Token for this tier must be in sorted order "
         );
         tierAllocated[_tierID] = Tier(_tokensToStake, 0);
     }
@@ -150,6 +154,17 @@ contract ModusStakingContract {
         uint256 _tierID
     ) external view returns (uint256) {
         return tierAllocated[_tierID].investorsCount;
+    }
+
+    /**
+     * @notice This function is used to determine stake amount for a tier
+     * @param _tierID Tier ID of the user
+     * @return  Returns stake amount in each tier
+     */
+    function stakeTokensInTier(
+        uint256 _tierID
+    ) external view returns (uint256) {
+        return tierAllocated[_tierID].tokensToStake;
     }
 
     /**

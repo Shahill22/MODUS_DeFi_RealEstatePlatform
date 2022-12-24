@@ -14,6 +14,8 @@ const {
   getEventProperty,
   timeTravel,
 } = require("@openzeppelin/test-helpers");
+const { web3 } = require("@openzeppelin/test-helpers/src/setup");
+const { ZERO_ADDRESS } = constants;
 
 // CONTRACTS
 const ModusStakingContract = artifacts.require("ModusStakingContract");
@@ -37,46 +39,59 @@ contract(
     account2,
     account3,
   ]) {
-    describe("1. Before deployment", async function () {
-      beforeEach(async function () {
-        this.token = await Token.new(treasury, founder1, founder2);
-        this.stakingContract = await ModusStakingContract.new(
-          this.token.address,
-          unstakingPeriod
-        );
-      });
+    let modus, stakingContract;
+    beforeEach(async () => {
+      modus = await Token.new(treasury, founder1, founder2);
+      stakingContract = await ModusStakingContract.new(
+        modus.address,
+        unstakingPeriod
+      );
     });
 
     describe("1. On deployment", async function () {
-      before(async function () {
-        this.token = await Token.new(treasury, founder1, founder2);
-        this.stakingContract = await ModusStakingContract.new(
-          this.token.address,
-          unstakingPeriod
-        );
-        this.deployTimestamp = await time.latest();
+      it("1.2. should set deployer as default owner", async function () {
+        expect(await stakingContract.owner()).to.equal(owner);
       });
-
       it("1.1. should set the token correctly", async function () {
-        expect(await this.stakingContract.token()).to.equal(this.token.address);
+        expect(await stakingContract.token()).to.equal(modus.address);
+      });
+      it("1.3. should revert if token address is zero", async function () {
+        await expectRevert(
+          stakingContract.setTokenAddress(ZERO_ADDRESS),
+          "ModusStaking: Invalid token address"
+        );
       });
     });
 
-    describe("2. Deposit and withdraw", async function () {
-      before(async function () {
-        this.token = await Token.new(treasury, founder1, founder2);
-        this.stakingContract = await ModusStakingContract.new(
-          this.token.address,
-          unstakingPeriod
-        );
-        await this.token.transfer(account1, depositAmount);
-        await this.token.approve(
-          this.stakingContract.address,
-          depositAmount,
-          from(account1)
+    describe("2. Tier Determination", async function () {
+      it("2.1. should set tiers", async function () {
+        const tierID = BN("1");
+        const tierAmount = BN("500");
+        const setTiersReceipt = await stakingContract.setTiers(tierAmount);
+        expectEvent(setTiersReceipt, "TierAdded", {
+          IDtier: tierID,
+          tierAmount: tierAmount,
+        });
+        expect(
+          await stakingContract.stakeTokensInTier(tierID)
+        ).to.bignumber.equal(tierAmount);
+      });
+      it("2.2. should revert if tiers not set in sorted order", async function () {
+        const tierID1 = BN("1");
+        const tierAmount1 = BN("500");
+        const setTiersReceipt1 = await stakingContract.setTiers(tierAmount1);
+        expectEvent(setTiersReceipt1, "TierAdded", {
+          IDtier: tierID1,
+          tierAmount: tierAmount2,
+        });
+        const tierID2 = BN("1");
+        const tierAmount2 = BN("100");
+        await expectRevert(
+          stakingContract.setTiers(tierAmount2),
+          "ModusStaking: Token for this tier must be in sorted order "
         );
       });
-
+      /*
       it("2.1. deposit: should throw if called with wrong argument types", async function () {
         await expectInvalidArgument.uint256(
           this.stakingContract.deposit("none"),
@@ -232,6 +247,7 @@ contract(
 
         expectEvent.inLogs(logs, "WithdrawExecuted", eventData);
       });
+      */
     });
   }
 );
