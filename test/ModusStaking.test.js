@@ -62,72 +62,141 @@ contract(
         );
       });
     });
+    describe("Tier", async function () {
+      describe("2. Set and Update Tiers", async function () {
+        it("2.1. should set tiers", async function () {
+          const tierID = BN("1");
+          const tierAmount = BN("500");
+          const setTiersReceipt = await stakingContract.setTiers(tierAmount);
+          expectEvent(setTiersReceipt, "TierAdded", {
+            IDtier: tierID,
+            tierStakeAmount: tierAmount,
+          });
 
-    describe("2. Tier Determination", async function () {
-      it("2.1. should set tiers", async function () {
-        const tierID = BN("1");
-        const tierAmount = BN("500");
-        const setTiersReceipt = await stakingContract.setTiers(tierAmount);
-        expectEvent(setTiersReceipt, "TierAdded", {
-          IDtier: tierID,
-          tierStakeAmount: tierAmount,
+          expect(
+            await stakingContract.stakeTokensInTier(tierID)
+          ).to.bignumber.equal(tierAmount);
         });
 
-        expect(
-          await stakingContract.stakeTokensInTier(tierID)
-        ).to.bignumber.equal(tierAmount);
-      });
-
-      it("2.2. should revert if tiers not set in sorted order", async function () {
-        const tierID1 = BN("1");
-        const tierAmount1 = BN("500");
-        const setTiersReceipt1 = await stakingContract.setTiers(tierAmount1);
-        expectEvent(setTiersReceipt1, "TierAdded", {
-          IDtier: tierID1,
-          tierStakeAmount: tierAmount1,
+        it("2.2. should revert if tiers not set in sorted order", async function () {
+          const tierID1 = BN("1");
+          const tierAmount1 = BN("500");
+          const setTiersReceipt1 = await stakingContract.setTiers(tierAmount1);
+          expectEvent(setTiersReceipt1, "TierAdded", {
+            IDtier: tierID1,
+            tierStakeAmount: tierAmount1,
+          });
+          const tierID2 = BN("2");
+          const tierAmount2 = BN("100");
+          await expectRevert(
+            stakingContract.setTiers(tierAmount2),
+            "ModusStaking: Token for this tier must be in sorted order "
+          );
         });
-        const tierID2 = BN("2");
-        const tierAmount2 = BN("100");
-        await expectRevert(
-          stakingContract.setTiers(tierAmount2),
-          "ModusStaking: Token for this tier must be in sorted order "
-        );
-      });
 
-      it("2.3. should update tier of given tier ID ", async function () {
-        const tierID1 = BN("1");
-        const tierAmount1 = BN("500");
-        const setTiersReceipt1 = await stakingContract.setTiers(tierAmount1);
-        expectEvent(setTiersReceipt1, "TierAdded", {
-          IDtier: tierID1,
-          tierStakeAmount: tierAmount1,
+        it("2.3. should update tier of given tier ID ", async function () {
+          const tierID1 = BN("1");
+          const tierAmount1 = BN("500");
+          const setTiersReceipt1 = await stakingContract.setTiers(tierAmount1);
+          expectEvent(setTiersReceipt1, "TierAdded", {
+            IDtier: tierID1,
+            tierStakeAmount: tierAmount1,
+          });
+          const tierID2 = BN("2");
+          const tierAmount2 = BN("700");
+          const setTiersReceipt2 = await stakingContract.setTiers(tierAmount2);
+          expectEvent(setTiersReceipt2, "TierAdded", {
+            IDtier: tierID2,
+            tierStakeAmount: tierAmount2,
+          });
+          const updateAmount = BN("100"); //update tier amount for tier 1
+          const updateTiersReceipt1 = await stakingContract.updateTiers(
+            tierID1,
+            updateAmount
+          );
+          expectEvent(updateTiersReceipt1, "TierUpdated", {
+            IDtier: tierID1,
+            tierStakeAmount: updateAmount,
+          });
+          expect(
+            await stakingContract.stakeTokensInTier(tierID1)
+          ).to.bignumber.equal(updateAmount);
         });
-        const tierAmount2 = BN("100");
-        const updateTiersReceipt1 = await stakingContract.updateTiers(
-          tierID1,
-          tierAmount2
-        );
-        expectEvent(updateTiersReceipt1, "TierUpdated", {
-          IDtier: tierID1,
-          tierStakeAmount: tierAmount2,
-        });
-        expect(
-          await stakingContract.stakeTokensInTier(tierID1)
-        ).to.bignumber.equal(tierAmount2);
-      });
-      /*
-      it("2.1. deposit: should throw if called with wrong argument types", async function () {
-        await expectInvalidArgument.uint256(
-          this.stakingContract.deposit("none"),
-          "amount"
-        );
-      });
 
-      it("2.2. deposit: should revert if deposit is called with an amount of 0", async function () {
-        const message =
-          "[Validation] The stake deposit has to be larger than 0";
-        await expectRevert(this.stakingContract.deposit("0"), message);
+        it("2.4. should revert if update tier amount of given tier ID breaks sorted order", async function () {
+          const tierID1 = BN("1");
+          const tierAmount1 = BN("500");
+          const setTiersReceipt1 = await stakingContract.setTiers(tierAmount1);
+          expectEvent(setTiersReceipt1, "TierAdded", {
+            IDtier: tierID1,
+            tierStakeAmount: tierAmount1,
+          });
+          const tierID2 = BN("2");
+          const tierAmount2 = BN("700");
+          const setTiersReceipt2 = await stakingContract.setTiers(tierAmount2);
+          expectEvent(setTiersReceipt2, "TierAdded", {
+            IDtier: tierID2,
+            tierStakeAmount: tierAmount2,
+          });
+          const updateAmount = BN("800"); //update tier amount for tier 1
+          await expectRevert(
+            stakingContract.updateTiers(tierID1, updateAmount),
+            "ModusStaking: Token for this tier must be less than tier after "
+          );
+        });
       });
+      describe("3. Determine Tier", async function () {
+        it("3.1. determine tiers for staked amount", async function () {
+          await stakingContract.setTiers(BN("500"));
+          await stakingContract.setTiers(BN("1000"));
+          await stakingContract.setTiers(BN("1500"));
+          await stakingContract.setTiers(BN("2000"));
+          await stakingContract.setTiers(BN("2500"));
+          const stakedAmount = BN("1200");
+          expect(
+            await stakingContract.determineTiers(stakedAmount)
+          ).to.bignumber.equal(BN("2"));
+        });
+        it("3.2. determine tier for staked amount greater than last tier value ", async function () {
+          await stakingContract.setTiers(BN("500"));
+          await stakingContract.setTiers(BN("1000"));
+          await stakingContract.setTiers(BN("1500"));
+          await stakingContract.setTiers(BN("2000"));
+          await stakingContract.setTiers(BN("2500"));
+          const stakedAmount = BN("12000");
+          expect(
+            await stakingContract.determineTiers(stakedAmount)
+          ).to.bignumber.equal(BN("5"));
+        });
+        it("3.3. should revert if staked amount less than tier one value ", async function () {
+          await stakingContract.setTiers(BN("500"));
+          await stakingContract.setTiers(BN("1000"));
+          await stakingContract.setTiers(BN("1500"));
+          await stakingContract.setTiers(BN("2000"));
+          await stakingContract.setTiers(BN("2500"));
+          const stakedAmount = BN("120");
+          await expectRevert(
+            stakingContract.determineTiers(stakedAmount),
+            "ModusStaking: Stake deposit lower for any tier "
+          );
+        });
+      });
+    });
+    //--------------------
+    describe("Staking & Unstaking", async function () {
+      describe("4. Deposit & Stake ", async function () {
+        it("4.1. deposit should revert if deposit is called with an amount of 0", async function () {
+          const message =
+            "ModusStaking: The stake deposit has to be larger than 0";
+          await expectRevert(stakingContract.deposit("0"), message);
+        });
+      });
+    });
+
+    /*
+      
+
+      
 
       it("2.3. deposit: should revert if the transfer fails because of insufficient funds", async function () {
         const exceedsBalanceMessage = "ERC20: transfer amount exceeds balance.";
@@ -272,6 +341,5 @@ contract(
         expectEvent.inLogs(logs, "WithdrawExecuted", eventData);
       });
       */
-    });
   }
 );

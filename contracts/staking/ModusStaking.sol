@@ -107,7 +107,11 @@ contract ModusStakingContract {
         require(_tierID != 0, "ModusStaking: Invalid tier ID");
         require(
             _tokensToStake > tierAllocated[_tierID - 1].tokensToStake,
-            "ModusStaking: Token for this tier must be in sorted order "
+            "ModusStaking: Token for this tier must be greater than previous tier "
+        );
+        require(
+            _tokensToStake < tierAllocated[_tierID + 1].tokensToStake,
+            "ModusStaking: Token for this tier must be less than tier after "
         );
         tierAllocated[_tierID] = Tier(_tokensToStake, 0);
         emit TierUpdated(_tierID, _tokensToStake);
@@ -128,6 +132,10 @@ contract ModusStakingContract {
         );
         uint256 low = 1;
         uint256 high = totalTiers;
+        require(
+            _stakedAmount >= tierAllocated[low].tokensToStake,
+            "ModusStaking: Stake deposit lower for any tier "
+        );
         if (totalTiers == 1) {
             return 1;
         } else if (_stakedAmount >= tierAllocated[totalTiers].tokensToStake) {
@@ -190,6 +198,10 @@ contract ModusStakingContract {
      * @param amount Amount of the modus token the user wish to stake
      */
     function deposit(uint256 amount) external {
+        require(
+            amount != 0,
+            "ModusStaking: The stake deposit has to be larger than 0"
+        );
         StakeDeposit storage stakeDeposit = _stakeDeposits[msg.sender];
 
         stakeDeposit.amount += amount;
