@@ -70,21 +70,23 @@ contract(
         const setTiersReceipt = await stakingContract.setTiers(tierAmount);
         expectEvent(setTiersReceipt, "TierAdded", {
           IDtier: tierID,
-          tierAmount: tierAmount,
+          tierStakeAmount: tierAmount,
         });
+
         expect(
           await stakingContract.stakeTokensInTier(tierID)
         ).to.bignumber.equal(tierAmount);
       });
+
       it("2.2. should revert if tiers not set in sorted order", async function () {
         const tierID1 = BN("1");
         const tierAmount1 = BN("500");
         const setTiersReceipt1 = await stakingContract.setTiers(tierAmount1);
         expectEvent(setTiersReceipt1, "TierAdded", {
           IDtier: tierID1,
-          tierAmount: tierAmount2,
+          tierStakeAmount: tierAmount1,
         });
-        const tierID2 = BN("1");
+        const tierID2 = BN("2");
         const tierAmount2 = BN("100");
         await expectRevert(
           stakingContract.setTiers(tierAmount2),

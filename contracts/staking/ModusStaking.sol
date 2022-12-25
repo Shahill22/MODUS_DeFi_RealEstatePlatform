@@ -44,7 +44,7 @@ contract ModusStakingContract {
         uint256 initiateDate
     );
     event WithdrawExecuted(address indexed account, uint256 amount);
-    event TierAdded(uint256 IDtier, uint256 tierAmount);
+    event TierAdded(uint256 IDtier, uint256 tierStakeAmount);
 
     /* Modifiers */
     modifier onlyOwner() {
@@ -85,8 +85,7 @@ contract ModusStakingContract {
         tierID += 1;
         require(tierID != 0, "ModusStaking: Invalid tier ID");
         require(
-            _tokensToStake < tierAllocated[tierID + 1].tokensToStake &&
-                _tokensToStake > tierAllocated[tierID - 1].tokensToStake,
+            _tokensToStake > tierAllocated[tierID - 1].tokensToStake,
             "ModusStaking: Token for this tier must be in sorted order "
         );
         tierAllocated[tierID] = Tier(_tokensToStake, 0);
