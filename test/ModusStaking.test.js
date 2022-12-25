@@ -93,6 +93,28 @@ contract(
           "ModusStaking: Token for this tier must be in sorted order "
         );
       });
+
+      it("2.3. should update tier of given tier ID ", async function () {
+        const tierID1 = BN("1");
+        const tierAmount1 = BN("500");
+        const setTiersReceipt1 = await stakingContract.setTiers(tierAmount1);
+        expectEvent(setTiersReceipt1, "TierAdded", {
+          IDtier: tierID1,
+          tierStakeAmount: tierAmount1,
+        });
+        const tierAmount2 = BN("100");
+        const updateTiersReceipt1 = await stakingContract.updateTiers(
+          tierID1,
+          tierAmount2
+        );
+        expectEvent(updateTiersReceipt1, "TierUpdated", {
+          IDtier: tierID1,
+          tierStakeAmount: tierAmount2,
+        });
+        expect(
+          await stakingContract.stakeTokensInTier(tierID1)
+        ).to.bignumber.equal(tierAmount2);
+      });
       /*
       it("2.1. deposit: should throw if called with wrong argument types", async function () {
         await expectInvalidArgument.uint256(
