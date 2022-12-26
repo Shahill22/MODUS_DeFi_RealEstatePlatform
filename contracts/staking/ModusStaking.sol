@@ -300,7 +300,7 @@ contract ModusStakingContract {
         //update investors tier count with current stake value
         uint256 latestTier = determineTiers(_stakeDeposits[msg.sender].amount);
         tierAllocated[latestTier].investorsCount += 1;
-        emit WithdrawExecuted(msg.sender, amount);
+        //emit WithdrawExecuted(msg.sender, amount);
         if (_stakeDeposits[msg.sender].amount == 0) {
             tierAllocated[currentTier].investorsCount -= 1;
             delete _stakeDeposits[msg.sender];
@@ -309,6 +309,7 @@ contract ModusStakingContract {
         if (_stakeDeposits[msg.sender].amount != 0) {
             tierAllocated[currentTier].investorsCount -= 1;
         }
+        emit WithdrawExecuted(msg.sender, amount);
     }
 
     // VIEW FUNCTIONS FOR HELPING THE USER AND CLIENT INTERFACE

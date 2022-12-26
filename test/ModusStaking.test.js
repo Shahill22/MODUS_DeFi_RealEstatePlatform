@@ -275,7 +275,7 @@ contract(
             currentBalance
           );
         });
-        it("4.3. should create a new deposit and determine tier level", async function () {
+        it("4.3. should create a new deposit,determine tier level and tier investors count", async function () {
           await stakingContract.setTokenAddress(modus.address, from(owner));
           await modus.transfer(account1, depositAmount, from(treasury));
           await stakingContract.setTiers(BN(500));
@@ -305,6 +305,9 @@ contract(
           );
           const currentBalance = await modus.balanceOf(stakingContract.address);
           expect(tierLevel).to.bignumber.equal(BN("3"));
+          expect(
+            await stakingContract.totalInvestorsInTier(3)
+          ).to.be.bignumber.equal(BN("1"));
           expectEvent.inLogs(logs, "StakeDeposited", eventData);
           expect(initialBalance.add(depositAmount)).to.be.bignumber.equal(
             currentBalance
@@ -426,6 +429,57 @@ contract(
           };
 
           expectEvent.inLogs(logs, "WithdrawExecuted", eventData);
+        });
+        it("5.7. executeWithdrawal: should transfer the initial staking deposit and update tier level and tier level investors count ", async function () {
+          await modus.transfer(account1, depositAmount, from(treasury));
+          await stakingContract.setTiers(BN(500));
+          await stakingContract.setTiers(BN(1000));
+          await stakingContract.setTiers(BN(1500));
+          await stakingContract.setTiers(BN(2000));
+          await stakingContract.setTiers(BN(2500));
+          await modus.approve(
+            stakingContract.address,
+            depositAmount,
+            from(account1)
+          );
+          const withdrawalAmount = depositAmount;
+          await stakingContract.deposit(depositAmount, from(account1));
+          const currentStakeDeposit = await stakingContract.getStakeDetails(
+            account1
+          );
+          const tierBeforeWithdrawal = await stakingContract.determineTiers(
+            currentStakeDeposit[0]
+          );
+          const presentTierInvestorsCount =
+            await stakingContract.totalInvestorsInTier(3);
+          await stakingContract.initiateWithdrawal(
+            withdrawalAmount,
+            from(account1)
+          );
+          await time.increase(time.duration.days(unstakingPeriod));
+          const { logs } = await stakingContract.executeWithdrawal(
+            from(account1)
+          );
+
+          const eventData = {
+            account: account1,
+            amount: depositAmount,
+          };
+          const StakeDepositAfterWithdrawal =
+            await stakingContract.getStakeDetails(account1);
+          const tierAfterWithdrawal = await stakingContract.determineTiers(
+            StakeDepositAfterWithdrawal[0]
+          );
+          const updateTierInvestorsCount =
+            await stakingContract.totalInvestorsInTier(3);
+          expectEvent.inLogs(logs, "WithdrawExecuted", eventData);
+          /*
+          expect(tierBeforeWithdrawal).to.be.bignumber.not.equal(
+            tierAfterWithdrawal
+          );*/
+          expect(presentTierInvestorsCount).to.be.bignumber.not.equal(
+            updateTierInvestorsCount
+          );
         });
       });
     });
