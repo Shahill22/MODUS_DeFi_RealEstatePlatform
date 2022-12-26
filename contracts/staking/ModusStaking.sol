@@ -290,11 +290,9 @@ contract ModusStakingContract {
             "ModusStaking: The unstaking period did not pass"
         );
 
-        // reducing the investors count of current tier
-        uint256 currentTier = getTierDetails(msg.sender);
-        tierAllocated[currentTier].investorsCount -= 1;
+        //current tier before withdrawal
+        uint256 currentTier = determineTiers(stakeDeposit.amount);
 
-        // check whether withdrawing full stake deposit or partially
         uint256 amount = withdrawState.amount;
 
         require(
@@ -306,8 +304,6 @@ contract ModusStakingContract {
                 (_stakeDeposits[msg.sender].amount) -
                 (amount);
             _stakeDeposits[msg.sender].endDate = 0;
-        } else {
-            //delete _stakeDeposits[msg.sender];
         }
 
         require(
@@ -319,11 +315,17 @@ contract ModusStakingContract {
         _withdrawStates[msg.sender].initiateDate = 0;
 
         //update investors tier count with current stake value
-        uint256 latestTier = getTierDetails(msg.sender);
+        uint256 latestTier = determineTiers(_stakeDeposits[msg.sender].amount);
         tierAllocated[latestTier].investorsCount += 1;
-
         emit WithdrawExecuted(msg.sender, amount);
-        delete _stakeDeposits[msg.sender];
+        if (_stakeDeposits[msg.sender].amount == 0) {
+            tierAllocated[currentTier].investorsCount -= 1;
+            delete _stakeDeposits[msg.sender];
+        }
+        // reducing the investors count of previous tier
+        if (_stakeDeposits[msg.sender].amount != 0) {
+            tierAllocated[currentTier].investorsCount -= 1;
+        }
     }
 
     // VIEW FUNCTIONS FOR HELPING THE USER AND CLIENT INTERFACE
