@@ -442,13 +442,11 @@ contract(
             depositAmount,
             from(account1)
           );
-          const withdrawalAmount = depositAmount;
+          const withdrawalAmount = BN("520");
           await stakingContract.deposit(depositAmount, from(account1));
-          const currentStakeDeposit = await stakingContract.getStakeDetails(
-            account1
-          );
+
           const tierBeforeWithdrawal = await stakingContract.determineTiers(
-            currentStakeDeposit[0]
+            depositAmount
           );
           const presentTierInvestorsCount =
             await stakingContract.totalInvestorsInTier(3);
@@ -463,20 +461,21 @@ contract(
 
           const eventData = {
             account: account1,
-            amount: depositAmount,
+            amount: withdrawalAmount,
           };
-          const StakeDepositAfterWithdrawal =
-            await stakingContract.getStakeDetails(account1);
+          expectEvent.inLogs(logs, "WithdrawExecuted", eventData);
+          const StakeAfterWithdrawal = await stakingContract.getStakeDetails(
+            account1
+          );
           const tierAfterWithdrawal = await stakingContract.determineTiers(
-            StakeDepositAfterWithdrawal[0]
+            StakeAfterWithdrawal[0]
           );
           const updateTierInvestorsCount =
             await stakingContract.totalInvestorsInTier(3);
-          expectEvent.inLogs(logs, "WithdrawExecuted", eventData);
-          /*
+
           expect(tierBeforeWithdrawal).to.be.bignumber.not.equal(
             tierAfterWithdrawal
-          );*/
+          );
           expect(presentTierInvestorsCount).to.be.bignumber.not.equal(
             updateTierInvestorsCount
           );

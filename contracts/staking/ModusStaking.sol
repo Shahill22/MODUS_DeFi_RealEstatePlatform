@@ -32,7 +32,7 @@ contract ModusStakingContract {
     }
 
     /* Mappings */
-    mapping(address => StakeDeposit) private _stakeDeposits;
+    mapping(address => StakeDeposit) public _stakeDeposits;
     mapping(address => WithdrawalState) private _withdrawStates;
     mapping(uint256 => Tier) public tierAllocated;
 
@@ -293,14 +293,6 @@ contract ModusStakingContract {
             token.transfer(msg.sender, amount),
             "ModusStaking: Something went wrong while transferring your initial deposit"
         );
-
-        _withdrawStates[msg.sender].amount = 0;
-        _withdrawStates[msg.sender].initiateDate = 0;
-
-        //update investors tier count with current stake value
-        uint256 latestTier = determineTiers(_stakeDeposits[msg.sender].amount);
-        tierAllocated[latestTier].investorsCount += 1;
-        //emit WithdrawExecuted(msg.sender, amount);
         if (_stakeDeposits[msg.sender].amount == 0) {
             tierAllocated[currentTier].investorsCount -= 1;
             delete _stakeDeposits[msg.sender];
@@ -309,6 +301,14 @@ contract ModusStakingContract {
         if (_stakeDeposits[msg.sender].amount != 0) {
             tierAllocated[currentTier].investorsCount -= 1;
         }
+        _withdrawStates[msg.sender].amount = 0;
+        _withdrawStates[msg.sender].initiateDate = 0;
+
+        //update investors tier count with current stake value
+        uint256 latestTier = determineTiers(_stakeDeposits[msg.sender].amount);
+        tierAllocated[latestTier].investorsCount += 1;
+
+        //emit WithdrawExecuted(msg.sender, amount);
         emit WithdrawExecuted(msg.sender, amount);
     }
 
@@ -327,12 +327,6 @@ contract ModusStakingContract {
         view
         returns (uint256 initialDeposit, uint256 startDate, uint256 endDate)
     {
-        require(
-            _stakeDeposits[account].exists &&
-                _stakeDeposits[account].amount != 0,
-            "ModusStaking: This account doesn't have a stake deposit"
-        );
-
         StakeDeposit memory s = _stakeDeposits[account];
 
         return (s.amount, s.startDate, s.endDate);
