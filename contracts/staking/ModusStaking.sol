@@ -266,7 +266,7 @@ contract ModusStakingContract {
         require(
             // stakeDeposit.endDate != 0 as timestamp of block recorded when withdrawal initiated
             stakeDeposit.endDate != 0 || withdrawState.amount != 0,
-            "ModusStaking: Withdraw amount is not initialized"
+            "ModusStaking: Withdraw is not initialized"
         );
         require(
             stakeDeposit.amount != 0,
