@@ -229,14 +229,14 @@ contract(
             from(account2)
           );
           await stakingContract.deposit(BN("520"), from(account1));
-          let beforeTierInvestorcount =
+          const beforeTierInvestorcount =
             await stakingContract.totalInvestorsInTier(1);
           await stakingContract.deposit(BN("1000"), from(account1));
           const currentTierInvestorcount =
             await stakingContract.totalInvestorsInTier(3);
-          expect(beforeTierInvestorcount - 1).to.be.bignumber.not.equal(
-            currentTierInvestorcount
-          );
+          expect(
+            beforeTierInvestorcount.sub(BN("1"))
+          ).to.be.bignumber.not.equal(currentTierInvestorcount);
         });
       });
     });
