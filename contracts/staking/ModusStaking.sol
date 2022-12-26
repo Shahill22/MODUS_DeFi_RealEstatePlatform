@@ -175,23 +175,6 @@ contract ModusStakingContract {
         return tierAllocated[_tierID].tokensToStake;
     }
 
-    /**
-     * @notice This function is used to get the Tier details of the user
-     * @param account Address of the user staked
-     * @return tier Returns the tier ID
-     */
-    function getTierDetails(address account) public returns (uint256 tier) {
-        require(
-            _stakeDeposits[account].exists &&
-                _stakeDeposits[account].amount != 0,
-            "ModusStaking: This account doesn't have a stake deposit"
-        );
-
-        StakeDeposit memory s = _stakeDeposits[account];
-
-        return (determineTiers(s.amount));
-    }
-
     /* Staking */
     /**
      * @notice This function is used to deposit and stake the modus token
