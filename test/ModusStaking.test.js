@@ -62,7 +62,7 @@ contract(
         );
       });
     });
-    /*
+
     describe("Tier", async function () {
       describe("2. Set and Update Tiers", async function () {
         it("2.1. should set tiers", async function () {
@@ -183,10 +183,9 @@ contract(
         });
       });
     });
-    */
+
     //--------------------
     describe("Staking & Unstaking", async function () {
-      /*
       describe("4. Deposit & Stake ", async function () {
         it("4.1. deposit should revert if deposit is called with an amount of 0", async function () {
           const message =
@@ -243,7 +242,7 @@ contract(
             depositAmount,
             from(account1)
           );
-          const tierLevel = await stakingContract.getTierDetails(account1);
+          const tierLevel = BN(await stakingContract.getTierDetails(account1));
           const currentBalance = await modus.balanceOf(stakingContract.address);
           //expect(BN("tierLevel")).to.bignumber.equal(BN("3"));
           //console.log(tierLevel);
@@ -256,7 +255,7 @@ contract(
           );
         });
       });
-      */
+
       describe("5. Withdrawal & Execution", async function () {
         it("5.1. initiateWithdrawal: should revert if the account has no stake deposit", async function () {
           await modus.transfer(account1, depositAmount, from(treasury));
