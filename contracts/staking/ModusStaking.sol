@@ -230,13 +230,14 @@ contract ModusStakingContract {
         WithdrawalState storage withdrawState = _withdrawStates[msg.sender];
         require(withdrawAmount > 0, "ModusStaking: Invalid withdrawal amount");
         require(
-            withdrawAmount <= stakeDeposit.amount,
-            "ModusStaking: Withdraw amount exceed the stake amount"
-        );
-        require(
             stakeDeposit.amount != 0,
             "ModusStaking: There is no stake deposit for this account"
         );
+        require(
+            withdrawAmount <= stakeDeposit.amount,
+            "ModusStaking: Withdraw amount exceed the stake amount"
+        );
+
         require(
             stakeDeposit.endDate == 0,
             "ModusStaking: You have already initiated the withdrawal"
@@ -285,9 +286,7 @@ contract ModusStakingContract {
         tierAllocated[currentTier].investorsCount -= 1;
 
         // check whether withdrawing full stake deposit or partially
-        uint256 amount = withdrawState.amount != 0
-            ? withdrawState.amount
-            : stakeDeposit.amount;
+        uint256 amount = withdrawState.amount;
 
         require(
             stakeDeposit.amount >= amount,
@@ -299,7 +298,7 @@ contract ModusStakingContract {
                 (amount);
             _stakeDeposits[msg.sender].endDate = 0;
         } else {
-            delete _stakeDeposits[msg.sender];
+            //delete _stakeDeposits[msg.sender];
         }
 
         require(
@@ -315,6 +314,7 @@ contract ModusStakingContract {
         tierAllocated[latestTier].investorsCount += 1;
 
         emit WithdrawExecuted(msg.sender, amount);
+        delete _stakeDeposits[msg.sender];
     }
 
     // VIEW FUNCTIONS FOR HELPING THE USER AND CLIENT INTERFACE
