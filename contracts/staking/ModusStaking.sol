@@ -203,7 +203,13 @@ contract ModusStakingContract {
             "ModusStaking: The stake deposit has to be larger than 0"
         );
         StakeDeposit storage stakeDeposit = _stakeDeposits[msg.sender];
-
+        uint256 currentTierInvestorsCount;
+        uint256 currentTierID;
+        if (stakeDeposit.exists) {
+            currentTierID = determineTiers(stakeDeposit.amount);
+            currentTierInvestorsCount = tierAllocated[currentTierID]
+                .investorsCount;
+        }
         stakeDeposit.amount += amount;
         stakeDeposit.startDate = block.timestamp;
         stakeDeposit.exists = true;
@@ -215,8 +221,11 @@ contract ModusStakingContract {
             token.transferFrom(msg.sender, address(this), amount),
             "ModusStaking: Something went wrong during the token transfer"
         );
-        uint256 toTier = getTierDetails(msg.sender);
+        uint256 toTier = determineTiers(stakeDeposit.amount);
         tierAllocated[toTier].investorsCount += 1;
+        if (currentTierInvestorsCount != 0) {
+            tierAllocated[currentTierID].investorsCount -= 1;
+        }
 
         emit StakeDeposited(msg.sender, amount);
     }

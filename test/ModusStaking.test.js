@@ -22,7 +22,7 @@ const ModusStakingContract = artifacts.require("ModusStakingContract");
 const Token = artifacts.require("Modus");
 
 const totalSupply = ether(BN(1e6));
-const depositAmount = ether(BN(1520));
+const depositAmount = BN(1520);
 
 const unstakingPeriod = BN(7); //7 Days
 
@@ -181,6 +181,63 @@ contract(
             "ModusStaking: Stake deposit lower for any tier "
           );
         });
+        it("3.4. should return total investors in a tier based on staked deposit ", async function () {
+          await stakingContract.setTokenAddress(modus.address, from(owner));
+          await modus.transfer(account1, depositAmount, from(treasury));
+          await modus.transfer(account2, depositAmount, from(treasury));
+          await stakingContract.setTiers(BN("500"));
+          await stakingContract.setTiers(BN("1000"));
+          await stakingContract.setTiers(BN("1500"));
+          await stakingContract.setTiers(BN("2000"));
+          await stakingContract.setTiers(BN("2500"));
+          await modus.approve(
+            stakingContract.address,
+            depositAmount,
+            from(account1)
+          );
+          await modus.approve(
+            stakingContract.address,
+            depositAmount,
+            from(account2)
+          );
+          await stakingContract.deposit(BN("520"), from(account1));
+          await stakingContract.deposit(BN("1000"), from(account2));
+          expect(
+            await stakingContract.totalInvestorsInTier(1)
+          ).to.be.bignumber.equal(BN("1"));
+          expect(
+            await stakingContract.totalInvestorsInTier(2)
+          ).to.be.bignumber.equal(BN("1"));
+        });
+        it("3.5. should return total investors in a tier if staked deposited twice ", async function () {
+          await stakingContract.setTokenAddress(modus.address, from(owner));
+          await modus.transfer(account1, depositAmount, from(treasury));
+          await modus.transfer(account2, depositAmount, from(treasury));
+          await stakingContract.setTiers(BN("500"));
+          await stakingContract.setTiers(BN("1000"));
+          await stakingContract.setTiers(BN("1500"));
+          await stakingContract.setTiers(BN("2000"));
+          await stakingContract.setTiers(BN("2500"));
+          await modus.approve(
+            stakingContract.address,
+            depositAmount,
+            from(account1)
+          );
+          await modus.approve(
+            stakingContract.address,
+            depositAmount,
+            from(account2)
+          );
+          await stakingContract.deposit(BN("520"), from(account1));
+          let beforeTierInvestorcount =
+            await stakingContract.totalInvestorsInTier(1);
+          await stakingContract.deposit(BN("1000"), from(account1));
+          const currentTierInvestorcount =
+            await stakingContract.totalInvestorsInTier(3);
+          expect(beforeTierInvestorcount - 1).to.be.bignumber.not.equal(
+            currentTierInvestorcount
+          );
+        });
       });
     });
 
@@ -221,17 +278,15 @@ contract(
         it("4.3. should create a new deposit and determine tier level", async function () {
           await stakingContract.setTokenAddress(modus.address, from(owner));
           await modus.transfer(account1, depositAmount, from(treasury));
-
-          await stakingContract.setTiers(BN("500"));
-          await stakingContract.setTiers(BN("1000"));
-          await stakingContract.setTiers(BN("1500"));
-          await stakingContract.setTiers(BN("2000"));
-          await stakingContract.setTiers(BN("2500"));
+          await stakingContract.setTiers(BN(500));
+          await stakingContract.setTiers(BN(1000));
+          await stakingContract.setTiers(BN(1500));
+          await stakingContract.setTiers(BN(2000));
+          await stakingContract.setTiers(BN(2500));
           const eventData = {
             account: account1,
             amount: depositAmount,
           };
-
           const initialBalance = await modus.balanceOf(stakingContract.address);
           await modus.approve(
             stakingContract.address,
@@ -242,13 +297,14 @@ contract(
             depositAmount,
             from(account1)
           );
-          const tierLevel = BN(await stakingContract.getTierDetails(account1));
+          const currentStakeDeposit = await stakingContract.getStakeDetails(
+            account1
+          );
+          const tierLevel = await stakingContract.determineTiers(
+            currentStakeDeposit[0]
+          );
           const currentBalance = await modus.balanceOf(stakingContract.address);
-          //expect(BN("tierLevel")).to.bignumber.equal(BN("3"));
-          //console.log(tierLevel);
-          expect(
-            await stakingContract.getTierDetails(account1)
-          ).to.be.bignumber.equal(BN("3"));
+          expect(tierLevel).to.bignumber.equal(BN("3"));
           expectEvent.inLogs(logs, "StakeDeposited", eventData);
           expect(initialBalance.add(depositAmount)).to.be.bignumber.equal(
             currentBalance
