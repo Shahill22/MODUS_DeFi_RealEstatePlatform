@@ -214,11 +214,11 @@ contract ProjectTokenStakingContract {
             } else {
                 rewardsWithdrawnInRewardToken += rewardsToTransfer;
                 require(
-                    rewardToken._mint(owner, reward),
+                    rewardToken.transfer(owner, reward),
                     "[Withdraw] Something went wrong while transferring your reward"
                 );
                 require(
-                    rewardToken._mint(msg.sender, rewardsToTransfer),
+                    rewardToken.transfer(msg.sender, rewardsToTransfer),
                     "[Withdraw] Something went wrong while transferring your reward"
                 );
             }
@@ -252,8 +252,9 @@ contract ProjectTokenStakingContract {
     function _computeReward(
         uint256 _amount,
         uint256 _daysStaked
-    ) private view returns (uint256) {
-        uint256 emissionRate = ((1.259921) ^ (_daysStaked)) - 1;
+    ) private pure returns (uint256) {
+        uint256 emissionRate = (((1.259921 * 1000000) / uint256(1000000)) ^
+            (_daysStaked)) - 1;
         return (((_amount * emissionRate) * 15) / 100);
     }
 }

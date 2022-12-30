@@ -17,4 +17,8 @@ contract ProjectRewardToken is ERC1594, ERC20Detailed {
         issuance = false;
         emit IssuanceFinalized();
     }
+
+    function mint(address to, uint256 amount) public {
+        _mint(to, amount);
+    }
 }
