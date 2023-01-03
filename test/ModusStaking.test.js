@@ -301,7 +301,7 @@ contract(
             account1
           );
           const tierLevel = await stakingContract.determineTiers(
-            currentStakeDeposit[0]
+            currentStakeDeposit
           );
           const currentBalance = await modus.balanceOf(stakingContract.address);
           expect(tierLevel).to.bignumber.equal(BN("3"));
@@ -468,7 +468,7 @@ contract(
             account1
           );
           const tierAfterWithdrawal = await stakingContract.determineTiers(
-            StakeAfterWithdrawal[0]
+            StakeAfterWithdrawal
           );
           const updateTierInvestorsCount =
             await stakingContract.totalInvestorsInTier(3);

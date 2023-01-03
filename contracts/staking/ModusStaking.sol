@@ -10,14 +10,11 @@ contract ModusStakingContract {
     address public owner;
     uint256 public currentTotalStake;
     uint256 public unstakingPeriod;
-    uint256 public tierID = 0;
-    uint256 public totalTiers = 0;
+    uint256 public tierID;
 
     /* Struct Declarations */
     struct StakeDeposit {
         uint256 amount;
-        uint256 startDate;
-        uint256 endDate;
         bool exists;
     }
 
@@ -90,7 +87,6 @@ contract ModusStakingContract {
             "ModusStaking: Token for this tier must be in sorted order "
         );
         tierAllocated[tierID] = Tier(_tokensToStake, 0);
-        totalTiers++;
         emit TierAdded(tierID, _tokensToStake);
     }
 
@@ -105,15 +101,25 @@ contract ModusStakingContract {
         uint256 _tokensToStake
     ) external onlyOwner {
         require(_tierID != 0, "ModusStaking: Invalid tier ID");
-        require(
-            _tokensToStake > tierAllocated[_tierID - 1].tokensToStake,
-            "ModusStaking: Token for this tier must be greater than previous tier "
-        );
-        require(
-            _tokensToStake < tierAllocated[_tierID + 1].tokensToStake,
-            "ModusStaking: Token for this tier must be less than tier after "
-        );
-        tierAllocated[_tierID] = Tier(_tokensToStake, 0);
+        require(_tierID <= tierID, "ModusStaking: Tier not present");
+        if (_tierID == tierID) {
+            require(
+                _tokensToStake > tierAllocated[_tierID - 1].tokensToStake,
+                "ModusStaking: Token for this tier must be greater than previous tier "
+            );
+            tierAllocated[_tierID] = Tier(_tokensToStake, 0);
+        } else {
+            require(
+                _tokensToStake > tierAllocated[_tierID - 1].tokensToStake,
+                "ModusStaking: Token for this tier must be greater than previous tier "
+            );
+            require(
+                _tokensToStake < tierAllocated[_tierID + 1].tokensToStake,
+                "ModusStaking: Token for this tier must be less than tier after "
+            );
+            tierAllocated[_tierID] = Tier(_tokensToStake, 0);
+        }
+
         emit TierUpdated(_tierID, _tokensToStake);
     }
 
@@ -131,15 +137,15 @@ contract ModusStakingContract {
             "ModusStaking: This account doesn't have a stake deposit"
         );
         uint256 low = 1;
-        uint256 high = totalTiers;
+        uint256 high = tierID;
         require(
             _stakedAmount >= tierAllocated[low].tokensToStake,
             "ModusStaking: Stake deposit lower for any tier "
         );
-        if (totalTiers == 1) {
+        if (tierID == 1) {
             return 1;
-        } else if (_stakedAmount >= tierAllocated[totalTiers].tokensToStake) {
-            return totalTiers;
+        } else if (_stakedAmount >= tierAllocated[tierID].tokensToStake) {
+            return tierID;
         } else {
             while (low < high) {
                 uint256 mid = Math.average(low, high);
@@ -194,7 +200,6 @@ contract ModusStakingContract {
                 .investorsCount;
         }
         stakeDeposit.amount += amount;
-        stakeDeposit.startDate = block.timestamp;
         stakeDeposit.exists = true;
 
         currentTotalStake += amount;
@@ -231,15 +236,10 @@ contract ModusStakingContract {
         );
 
         require(
-            stakeDeposit.endDate == 0,
-            "ModusStaking: You have already initiated the withdrawal"
-        );
-        require(
             withdrawState.amount == 0,
             "ModusStaking: You have already initiated the withdrawal"
         );
-        // set stakeDeposit end to current block timestamp (for struct StakeDeposit)
-        stakeDeposit.endDate = block.timestamp;
+
         withdrawState.amount = withdrawAmount;
         withdrawState.initiateDate = block.timestamp;
 
@@ -258,7 +258,7 @@ contract ModusStakingContract {
 
         require(
             // stakeDeposit.endDate != 0 as timestamp of block recorded when withdrawal initiated
-            stakeDeposit.endDate != 0 || withdrawState.amount != 0,
+            withdrawState.initiateDate != 0 || withdrawState.amount != 0,
             "ModusStaking: Withdraw is not initialized"
         );
         require(
@@ -267,7 +267,8 @@ contract ModusStakingContract {
         );
 
         // validate enough days have passed from initiating the withdrawal
-        uint256 daysPassed = (block.timestamp - stakeDeposit.endDate) / 1 days;
+        uint256 daysPassed = (block.timestamp - withdrawState.initiateDate) /
+            1 days;
         require(
             unstakingPeriod <= daysPassed,
             "ModusStaking: The unstaking period did not pass"
@@ -286,7 +287,6 @@ contract ModusStakingContract {
             _stakeDeposits[msg.sender].amount =
                 (_stakeDeposits[msg.sender].amount) -
                 (amount);
-            _stakeDeposits[msg.sender].endDate = 0;
         }
 
         require(
@@ -317,18 +317,13 @@ contract ModusStakingContract {
      * @notice Helper function to get the stake details of the user
      * @param account Address of the user staked
      * @return initialDeposit Returns the stake deposit of the user
-     * @return startDate Returns the start date of staking
-     * @return endDate Returns the end date of staking
+     
      */
     function getStakeDetails(
         address account
-    )
-        external
-        view
-        returns (uint256 initialDeposit, uint256 startDate, uint256 endDate)
-    {
+    ) external view returns (uint256 initialDeposit) {
         StakeDeposit memory s = _stakeDeposits[account];
 
-        return (s.amount, s.startDate, s.endDate);
+        return (s.amount);
     }
 }

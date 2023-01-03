@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract ProjectTokenStakingContract {
-    /*CONTRACT STATE VARIABLES*/
+    /* Contract state variables */
     IERC20 public projectToken;
     IERC20 public modusToken;
     IERC20 public rewardToken;
@@ -14,8 +14,12 @@ contract ProjectTokenStakingContract {
     uint256 public currentTotalStake;
     uint256 public minstakingPeriod;
     uint256 public maxStakingPeriod;
+    uint256 public rewardsDistributed;
+    uint256 public rewardsWithdrawnInModus;
+    uint256 public rewardsWithdrawnInRewardToken;
+    uint256 public totalRewardsDistributed;
 
-    /* STRUCT DECLARATIONS*/
+    /* Struct Declarations */
     struct StakeDeposit {
         uint256 amount;
         uint256 startDate;
@@ -23,16 +27,16 @@ contract ProjectTokenStakingContract {
         bool exists;
     }
 
-    // STRUCT WITHDRAWAL
     struct WithdrawalState {
         uint256 initiateDate;
         uint256 amount;
     }
-    /*MAPPINGS*/
+
+    /* Mappings */
     mapping(address => StakeDeposit) private _stakeDeposits;
     mapping(address => WithdrawalState) private _withdrawStates;
 
-    // EVENTS
+    /* Events */
     event StakeDeposited(address indexed account, uint256 amount);
     event WithdrawInitiated(
         address indexed account,
@@ -47,14 +51,7 @@ contract ProjectTokenStakingContract {
     event RewardsWithdrawn(address indexed account, uint256 reward);
     event RewardsDistributed(uint256 amount);
 
-    //reward calculations
-
-    uint256 public rewardsDistributed;
-    uint256 public rewardsWithdrawnInModus;
-    uint256 public rewardsWithdrawnInRewardToken;
-    uint256 public totalRewardsDistributed;
-
-    // MODIFIERS
+    /* Modifiers */
 
     modifier onlyOwner() {
         require(msg.sender == owner, "ModusStaking: Address unauthorized");
