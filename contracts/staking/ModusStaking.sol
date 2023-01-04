@@ -27,7 +27,6 @@ contract ModusStakingContract {
         uint256 tokensToStake;
         uint256 investorsCount;
     }
-    //StakeDeposit[] stakeArray;
 
     /* Mappings */
     mapping(address => StakeDeposit) public _stakeDeposits;
@@ -209,7 +208,7 @@ contract ModusStakingContract {
             token.transferFrom(msg.sender, address(this), amount),
             "ModusStaking: Something went wrong during the token transfer"
         );
-        //stakeArray.push(stakeDeposit);
+
         uint256 toTier = determineTiers(stakeDeposit.amount);
         addressestotierID[msg.sender] = toTier;
         tierAllocated[toTier].investorsCount += 1;
