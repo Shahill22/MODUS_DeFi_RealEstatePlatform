@@ -27,11 +27,13 @@ contract ModusStakingContract {
         uint256 tokensToStake;
         uint256 investorsCount;
     }
+    //StakeDeposit[] stakeArray;
 
     /* Mappings */
     mapping(address => StakeDeposit) public _stakeDeposits;
     mapping(address => WithdrawalState) private _withdrawStates;
     mapping(uint256 => Tier) public tierAllocated;
+    mapping(address => uint256) public addressestotierID;
 
     /* Events */
     event StakeDeposited(address indexed account, uint256 amount);
@@ -192,16 +194,14 @@ contract ModusStakingContract {
             "ModusStaking: The stake deposit has to be larger than 0"
         );
         StakeDeposit storage stakeDeposit = _stakeDeposits[msg.sender];
-        uint256 currentTierInvestorsCount;
+
         uint256 currentTierID;
         if (stakeDeposit.exists) {
-            currentTierID = determineTiers(stakeDeposit.amount);
-            currentTierInvestorsCount = tierAllocated[currentTierID]
-                .investorsCount;
+            currentTierID = addressestotierID[msg.sender];
         }
+
         stakeDeposit.amount += amount;
         stakeDeposit.exists = true;
-
         currentTotalStake += amount;
 
         // Transfer the Tokens to this contract
@@ -209,9 +209,12 @@ contract ModusStakingContract {
             token.transferFrom(msg.sender, address(this), amount),
             "ModusStaking: Something went wrong during the token transfer"
         );
+        //stakeArray.push(stakeDeposit);
         uint256 toTier = determineTiers(stakeDeposit.amount);
+        addressestotierID[msg.sender] = toTier;
         tierAllocated[toTier].investorsCount += 1;
-        if (currentTierInvestorsCount != 0) {
+
+        if (currentTierID != 0) {
             tierAllocated[currentTierID].investorsCount -= 1;
         }
 
@@ -275,7 +278,7 @@ contract ModusStakingContract {
         );
 
         //current tier before withdrawal
-        uint256 currentTier = determineTiers(stakeDeposit.amount);
+        uint256 currentTier = addressestotierID[msg.sender];
 
         uint256 amount = withdrawState.amount;
 
