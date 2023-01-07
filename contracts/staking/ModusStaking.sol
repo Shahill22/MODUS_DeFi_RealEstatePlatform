@@ -2,6 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract ModusStakingContract {
@@ -259,7 +260,6 @@ contract ModusStakingContract {
         WithdrawalState memory withdrawState = _withdrawStates[msg.sender];
 
         require(
-            // stakeDeposit.endDate != 0 as timestamp of block recorded when withdrawal initiated
             withdrawState.initiateDate != 0 || withdrawState.amount != 0,
             "ModusStaking: Withdraw is not initialized"
         );
